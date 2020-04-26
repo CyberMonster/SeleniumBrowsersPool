@@ -10,6 +10,7 @@
     <Description>Pool for start and manage browsers under selenium and selenoid server</Description>
     <Copyright>Chukashev Oleg</Copyright>
     <RepositoryType>Git</RepositoryType>
+    <RepositoryUrl>https://github.com/CyberMonster/SeleniumBrowsersPool</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
