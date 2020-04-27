@@ -68,9 +68,9 @@ namespace SeleniumBrowsersPool.BrowserPool
 
             _logger.LogDebug("Stop started");
             tokenSource.Cancel();
+            await _browserPool.StopAsync();
             StopBrowsers();
             _logger.LogDebug("All browsers been leved");
-            await _browserPool.StopAsync();
             isDisposed = true;
         }
 
@@ -135,7 +135,8 @@ namespace SeleniumBrowsersPool.BrowserPool
         }
 
         private void StopBrowsers()
-            => browsers.ForEach(b =>
+        {
+            browsers.ForEach(b =>
             {
                 try
                 {
@@ -149,6 +150,8 @@ namespace SeleniumBrowsersPool.BrowserPool
                 b._driver.Quit();
                 return;
             });
+            browsers.Clear();
+        }
 
         #region IDisposable Support
         private bool isDisposed = false;
@@ -162,9 +165,7 @@ namespace SeleniumBrowsersPool.BrowserPool
         }
 
         ~BrowserPoolArbitrator()
-        {
-            Dispose(true);
-        }
+            => Dispose(true);
 
         public void Dispose()
         {
