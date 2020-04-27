@@ -36,6 +36,7 @@ namespace SeleniumBrowsersPool.BrowserPool
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            isDisposed = false;
             tokenSource = new CancellationTokenSource();
             var maxIdleTime = _poolSettings.Value.MaxIdleTime;
             var deltaIdleTime = _poolSettings.Value.DeltaIdleTime.Ticks;
@@ -62,6 +63,9 @@ namespace SeleniumBrowsersPool.BrowserPool
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
+            if (isDisposed)
+                return;
+
             _logger.LogDebug("Stop started");
             tokenSource.Cancel();
             StopBrowsers();
