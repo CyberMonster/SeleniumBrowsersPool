@@ -33,22 +33,18 @@ namespace SeleniumBrowsersPool
                 .AddSingleton(browserFactory)
                 .AddSingleton(stateProvider);
 
-        public static IServiceCollection AddSeleniumBrowsersPool<TBrowserFactory, TBrowserPoolStateProvider>(this IServiceCollection services, IConfiguration cfg, Func<IServiceProvider, TBrowserFactory> browserFactory, Func<IServiceProvider, TBrowserPoolStateProvider> stateProvider)
-            where TBrowserFactory : class, IBrowserFactory
-            where TBrowserPoolStateProvider : class, IBrowserPoolStateProvider
+        public static IServiceCollection AddSeleniumBrowsersPool<IBrowserFactory, IBrowserPoolStateProvider>(this IServiceCollection services, IConfiguration cfg, Func<IServiceProvider, IBrowserFactory> browserFactory, Func<IServiceProvider, IBrowserPoolStateProvider> stateProvider)
             => services.AddBrowserPool(cfg)
                 .AddSingleton(browserFactory)
                 .AddSingleton(stateProvider);
 
-        public static IServiceCollection AddSeleniumBrowsersPool<TBrowserFactory, TBrowserPoolStateProvider>(this IServiceCollection services, IConfiguration cfg, Func<IServiceProvider, TBrowserPoolStateProvider> stateProvider)
+        public static IServiceCollection AddSeleniumBrowsersPool<TBrowserFactory, IBrowserPoolStateProvider>(this IServiceCollection services, IConfiguration cfg, Func<IServiceProvider, IBrowserPoolStateProvider> stateProvider)
             where TBrowserFactory : class, IBrowserFactory
-            where TBrowserPoolStateProvider : class, IBrowserPoolStateProvider
             => services.AddBrowserPool(cfg)
                 .AddSingleton<IBrowserFactory, TBrowserFactory>()
                 .AddSingleton(stateProvider);
 
-        public static IServiceCollection AddSeleniumBrowsersPool<TBrowserFactory, TBrowserPoolStateProvider>(this IServiceCollection services, IConfiguration cfg, Func<IServiceProvider, TBrowserFactory> browserFactory)
-            where TBrowserFactory : class, IBrowserFactory
+        public static IServiceCollection AddSeleniumBrowsersPool<IBrowserFactory, TBrowserPoolStateProvider>(this IServiceCollection services, IConfiguration cfg, Func<IServiceProvider, IBrowserFactory> browserFactory)
             where TBrowserPoolStateProvider : class, IBrowserPoolStateProvider
             => services.AddBrowserPool(cfg)
                 .AddSingleton(browserFactory)
