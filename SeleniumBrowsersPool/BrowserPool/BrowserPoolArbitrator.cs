@@ -83,7 +83,7 @@ namespace SeleniumBrowsersPool.BrowserPool
 
                 StopTaggedBrowsers();
                 TagBrowsers();
-                await SendBeam();
+                SendBeam();
 
                 await StartBrowser(token);
                 Thread.Sleep(200);
@@ -117,7 +117,7 @@ namespace SeleniumBrowsersPool.BrowserPool
             }
         }
 
-        private async Task SendBeam()
+        private void SendBeam()
         {
             if (!_poolSettings.Value.SendBeamPackages
                 || _poolSettings.Value.BeamPackagesInterval <= TimeSpan.Zero)
@@ -130,9 +130,18 @@ namespace SeleniumBrowsersPool.BrowserPool
                     .NullIfEmpty()
                     ?.Min(x => x.LastBeamTime));
 
+            if (browserToBeam == null)
+                return;
+
             var beam = new BeamCommand();
-            await _browserPool.DoJob(browserToBeam, new BeamCommand())
-                .ContinueWith(t => _logger.LogWarning(t.Exception, "Error on beam {CommandId} on {BrowserId}", beam.Id, browserToBeam._id));
+            _browserPool.DoJob(browserToBeam, new BeamCommand())
+                .ContinueWith(t =>
+                    _logger.LogWarning(
+                        t.Exception,
+                        "Error on beam {CommandId} on {BrowserId}",
+                        beam.Id,
+                        browserToBeam._id),
+                    TaskContinuationOptions.OnlyOnFaulted);
         }
 
         private async Task StartBrowser(CancellationToken token)

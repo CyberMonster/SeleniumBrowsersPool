@@ -80,19 +80,12 @@ namespace SeleniumBrowsersPool.BrowserPool
             using var _ = _logger.BeginScope("{JobType} {CommandId} on {BrowserId}", command.GetType().Name, command.Id, wrapper._id);
             _logger.LogDebug("Start job");
 
-            if (command.RunNumber > _poolSettings.Value.CommandMaxRuns)
-            {
-                await _stateProvider.SaveProblemAction(command, CommandProblem.TooManyRuns);
+            if (!await SaveIfNotValidCommand(command))
                 return;
-            }
-            else if (command.CancellationToken.IsCancellationRequested)
-            {
-                await _stateProvider.SaveProblemAction(command, CommandProblem.OperationCancelled);
-                return;
-            }
 
+            var isBeamCommand = command is BeamCommand;
             if (wrapper._isInWork)
-                if (command is BeamCommand)
+                if (isBeamCommand)
                     return;
                 else
                     throw new InvalidOperationException("Browser wrapper is in inconsistent state. Field name _isInWork.");
@@ -133,19 +126,41 @@ namespace SeleniumBrowsersPool.BrowserPool
             {
                 ++wrapper.Fails;
                 _logger.LogError(ex, "Job fail", command.GetType().Name, wrapper._id);
+                if (!isBeamCommand)
+                    _actions.Enqueue(command);
             }
             localLoopCancel.Cancel();
             wrapper._isInWork = false;
-            if (command is BeamCommand bc)
+            _logger.LogDebug("Finish job", command.GetType().Name, wrapper._id);
+            if (isBeamCommand)
                 wrapper.LastBeamTime = _dateTimeProvider.UtcNow;
             else
                 wrapper.LastJobTime = _dateTimeProvider.UtcNow;
-            _logger.LogDebug("Finish job", command.GetType().Name, wrapper._id);
 
             if (wrapper.Fails < _poolSettings.Value.BrowserMaxFail)
                 _browsers.Push(wrapper);
             else
                 wrapper.CanBeStopped = true;
+        }
+
+        private async Task<bool> SaveIfNotValidCommand(IBrowserCommand command)
+        {
+            if (command is BeamCommand)
+            {
+                return true;
+            }
+            else if (command.RunNumber > _poolSettings.Value.CommandMaxRuns)
+            {
+                await _stateProvider.SaveProblemAction(command, CommandProblem.TooManyRuns);
+                return false;
+            }
+            else if (command.CancellationToken.IsCancellationRequested)
+            {
+                await _stateProvider.SaveProblemAction(command, CommandProblem.OperationCancelled);
+                return true;
+            }
+
+            return true;
         }
 
         Task IBrowserPoolInternal.DoJob(BrowserWrapper wrapper, BeamCommand command)
