@@ -46,13 +46,12 @@ namespace SeleniumBrowsersPool.BrowserPool
                     .Range(0, _poolSettings.Value.MaxDegreeOfParallel)
                     .Select(i =>
                     {
-                        var browser = new BrowserWrapper(
-                            _factory.Create(),
-                            maxIdleTime + TimeSpan.FromTicks(deltaIdleTime * i),
-                            _dateTimeProvider.UtcNow);
-                        _logger.LogDebug("Start browser {Id}", browser._id);
+                        var browser = StartBrowserSafe(maxIdleTime + TimeSpan.FromTicks(deltaIdleTime * i));
+                        if (browser != null)
+                            _logger.LogDebug("Start browser {Id}", browser._id);
                         return browser;
                     })
+                    .Where(x => x != null)
                     .ToList();
 
             Task.Run(() => Loop(tokenSource.Token))
@@ -116,11 +115,9 @@ namespace SeleniumBrowsersPool.BrowserPool
                 && activeBrowsers * _poolSettings.Value.MaxQueueSizePerBrowser < await _browserPool.GetQueueLength()
                 || (activeBrowsers < 1 && _poolSettings.Value.KeepAliveAtLeastOneBrowser))
             {
-                var browser = new BrowserWrapper(
-                _factory.Create(),
-                //degradation point
-                browsers.LastOrDefault()?._maxIdleTime ?? _poolSettings.Value.MaxIdleTime + TimeSpan.FromTicks(_poolSettings.Value.DeltaIdleTime.Ticks),
-                _dateTimeProvider.UtcNow);
+                var browser = StartBrowserSafe((browsers.LastOrDefault()?._maxIdleTime ?? _poolSettings.Value.MaxIdleTime) + _poolSettings.Value.DeltaIdleTime);
+                if (browser == null)
+                    return;
 
                 browsers.Add(browser);
                 if (token.IsCancellationRequested)
@@ -131,6 +128,20 @@ namespace SeleniumBrowsersPool.BrowserPool
 
                 await _browserPool.RegisterBrowser(browser);
                 return;
+            }
+        }
+
+        private BrowserWrapper StartBrowserSafe(TimeSpan maxIdleTime)
+        {
+            try
+            {
+                var driver = _factory.Create();
+                return new BrowserWrapper(driver, maxIdleTime, _dateTimeProvider.UtcNow);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fail on create webDriver");
+                return null;
             }
         }
 
