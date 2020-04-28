@@ -12,5 +12,7 @@ namespace SeleniumBrowsersPool
         public int CommandMaxRuns { get; set; } = 3;
         public int BrowserMaxFail { get; set; } = 3;
         public int MaxQueueSizePerBrowser { get; set; } = 3;
+        public bool SendBeamPackages { get; set; } = false;
+        public TimeSpan BeamPackagesInterval { get; set; } = TimeSpan.FromMinutes(1);
     }
 }

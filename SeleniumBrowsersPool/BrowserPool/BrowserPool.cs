@@ -91,12 +91,18 @@ namespace SeleniumBrowsersPool.BrowserPool
                 return;
             }
 
-            wrapper._onWork = true;
+            if (wrapper._isInWork)
+                if (command is BeamCommand)
+                    return;
+                else
+                    throw new InvalidOperationException("Browser wrapper is in inconsistent state. Field name _isInWork.");
+
+            wrapper._isInWork = true;
             if (wrapper.CanBeStopped)
             {
-                _logger.LogDebug("Current browser been stoped. Reenqueue action.");
+                _logger.LogDebug("Current browser will be stopped. Reenqueue action.");
                 _actions.Enqueue(command);
-                wrapper._onWork = false;
+                wrapper._isInWork = false;
                 return;
             }
 
@@ -129,8 +135,11 @@ namespace SeleniumBrowsersPool.BrowserPool
                 _logger.LogError(ex, "Job fail", command.GetType().Name, wrapper._id);
             }
             localLoopCancel.Cancel();
-            wrapper._onWork = false;
-            wrapper.LastJobTime = _dateTimeProvider.UtcNow;
+            wrapper._isInWork = false;
+            if (command is BeamCommand bc)
+                wrapper.LastBeamTime = _dateTimeProvider.UtcNow;
+            else
+                wrapper.LastJobTime = _dateTimeProvider.UtcNow;
             _logger.LogDebug("Finish job", command.GetType().Name, wrapper._id);
 
             if (wrapper.Fails < _poolSettings.Value.BrowserMaxFail)
@@ -138,6 +147,9 @@ namespace SeleniumBrowsersPool.BrowserPool
             else
                 wrapper.CanBeStopped = true;
         }
+
+        Task IBrowserPoolInternal.DoJob(BrowserWrapper wrapper, BeamCommand command)
+            => DoJob(wrapper, command, new CancellationToken());
 
         public async Task StopAsync()
         {

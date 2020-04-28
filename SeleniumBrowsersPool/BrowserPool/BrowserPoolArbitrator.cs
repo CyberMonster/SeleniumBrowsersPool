@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SeleniumBrowsersPool.BrowserPool.Commands;
 using SeleniumBrowsersPool.BrowserPool.Factories;
 using SeleniumBrowsersPool.Helpers;
 using System;
@@ -80,29 +81,58 @@ namespace SeleniumBrowsersPool.BrowserPool
                 if (token.IsCancellationRequested)
                     break;
 
-                var browserToStop = browsers.FirstOrDefault(x => x.CanBeStopped && x._onWork != true);
-                if (browserToStop != null)
-                {
-                    browsers.Remove(browserToStop);
-                    browserToStop._driver.Quit();
-                }
-
-                if (!_poolSettings.Value.KeepAliveAtLeastOneBrowser
-                    || browsers.Where(x => !x.CanBeStopped).Count() > 1)
-                {
-                    browserToStop = browsers
-                        .FirstOrDefault(b => b.LastJobTime == browsers
-                            .Where(x => x.LastJobTime != default && !x._onWork && !x.CanBeStopped)
-                            .Where(x => _dateTimeProvider.UtcNow - x.LastJobTime > x._maxIdleTime)
-                            .NullIfEmpty()
-                            ?.Min(x => x.LastJobTime));
-                    if (browserToStop != null)
-                        browserToStop.CanBeStopped = true;
-                }
+                StopTaggedBrowsers();
+                TagBrowsers();
+                await SendBeam();
 
                 await StartBrowser(token);
                 Thread.Sleep(200);
             }
+        }
+
+        private void StopTaggedBrowsers()
+        {
+            var browserToStop = browsers.FirstOrDefault(x => x.CanBeStopped && !x._isInWork);
+            if (browserToStop != null)
+            {
+                browsers.Remove(browserToStop);
+                browserToStop._driver.Quit();
+            }
+        }
+
+        private void TagBrowsers()
+        {
+            if (!_poolSettings.Value.KeepAliveAtLeastOneBrowser
+                    || browsers.Where(x => !x.CanBeStopped).Count() > 1)
+            {
+                var browserToStop = browsers
+                    .FirstOrDefault(b => b.LastJobTime == browsers
+                        .Where(x => !x._isInWork && !x.CanBeStopped)
+                        .Where(x => _dateTimeProvider.UtcNow - x.LastJobTime > x._maxIdleTime)
+                        .NullIfEmpty()
+                        ?.Min(x => x.LastJobTime));
+
+                if (browserToStop != null)
+                    browserToStop.CanBeStopped = true;
+            }
+        }
+
+        private async Task SendBeam()
+        {
+            if (!_poolSettings.Value.SendBeamPackages
+                || _poolSettings.Value.BeamPackagesInterval <= TimeSpan.Zero)
+                return;
+
+            var browserToBeam = browsers
+                .FirstOrDefault(b => b.LastBeamTime == browsers
+                    .Where(x => !x._isInWork && !x.CanBeStopped)
+                    .Where(x => _dateTimeProvider.UtcNow - x.LastBeamTime > _poolSettings.Value.BeamPackagesInterval)
+                    .NullIfEmpty()
+                    ?.Min(x => x.LastBeamTime));
+
+            var beam = new BeamCommand();
+            await _browserPool.DoJob(browserToBeam, new BeamCommand())
+                .ContinueWith(t => _logger.LogWarning(t.Exception, "Error on beam {CommandId} on {BrowserId}", beam.Id, browserToBeam._id));
         }
 
         private async Task StartBrowser(CancellationToken token)

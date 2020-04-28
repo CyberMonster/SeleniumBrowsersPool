@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using SeleniumBrowsersPool.BrowserPool.Commands;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace SeleniumBrowsersPool.BrowserPool
@@ -9,5 +10,6 @@ namespace SeleniumBrowsersPool.BrowserPool
         public Task StartAsync(List<BrowserWrapper> browsers);
         public Task RegisterBrowser(BrowserWrapper browser);
         public Task<int> GetQueueLength();
+        internal Task DoJob(BrowserWrapper wrapper, BeamCommand command);
     }
 }

@@ -16,6 +16,38 @@ services.AddSeleniumBrowsersPool<FirefoxFactory, BrowserPoolStateProvider>(Confi
 Where ```FirefoxFactory``` is an implementation of the ```IBrowserFactory```
 ```BrowserPoolStateProvider``` is an implementation of the ```IBrowserPoolStateProvider```
 
+### Advanced configuration
+
+This package register the ```BrowserPoolSettings``` class to provide settings from ```IConfiguration```.
+You can define the ```BrowserPoolSettings``` section in your config file.
+
+```CSharp
+public class BrowserPoolSettings
+{
+    public int MaxDegreeOfParallel { get; set; } = 1;
+    public TimeSpan MaxIdleTime { get; set; } = TimeSpan.FromMinutes(10);
+    public TimeSpan DeltaIdleTime { get; set; } = TimeSpan.Zero;
+    public bool StartBrowsersOnRun { get; set; } = false;
+    public bool KeepAliveAtLeastOneBrowser { get; set; } = true;
+    public int CommandMaxRuns { get; set; } = 3;
+    public int BrowserMaxFail { get; set; } = 3;
+    public int MaxQueueSizePerBrowser { get; set; } = 3;
+    public bool SendBeamPackages { get; set; } = false;
+    public TimeSpan BeamPackagesInterval { get; set; } = TimeSpan.FromMinutes(1);
+}
+```
+
+```MaxDegreeOfParallel``` - set count of max active browsers;
+```MaxIdleTime``` - idle time, after which browser will be closed;
+```DeltaIdleTime``` - delta between browsers granted idle time;
+```StartBrowsersOnRun``` - if true, browsers will be started on app start;
+```KeepAliveAtLeastOneBrowser``` - if true, last active browser will be active always;
+```CommandMaxRuns``` - count of job runs after which job be removed as failed;
+```BrowserMaxFail``` - count of fail job on current browser instance, after which browser will be restarted;
+```MaxQueueSizePerBrowser``` - if queue on browser less then this value, addition browser not be started;
+```SendBeamPackages``` - if true, then if the browser in idle state, will be sent a package to prevent auto close by selenoid;
+```BeamPackagesInterval``` - interval between beam packages;
+
 ### Connect to Selenoid
 
 For connecting to [selenoid](https://aerokube.com/selenoid/latest/) just configure that. If you open [Ui](https://aerokube.com/selenoid-ui/latest/) of selenoid, on page Capabilities after choosing a current browser, you can copy code for connecting ```RemoteWebDriver```. After that create an implementation of the ```IBrowserFactory```:
