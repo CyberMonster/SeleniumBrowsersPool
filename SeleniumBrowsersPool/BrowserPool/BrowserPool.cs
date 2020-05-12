@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace SeleniumBrowsersPool.BrowserPool
 {
-    public class BrowserPool : IBrowserPool, IBrowserPoolInternal, IDisposable
+    public class BrowserPool : IBrowserPoolAdvanced, IDisposable
     {
         private ConcurrentQueue<IBrowserCommand> _actions;
         private ConcurrentStack<BrowserWrapper> _browsers;
@@ -38,19 +38,35 @@ namespace SeleniumBrowsersPool.BrowserPool
         public void DoJob(IBrowserCommand command)
             => _actions.Enqueue(command);
 
-        public async Task StartAsync(List<BrowserWrapper> browsers)
+        async Task IBrowserPoolAdvanced.StartAsync(List<BrowserWrapper> browsers)
         {
+            isNeedSaveState = true;
+
             _loopCancelTokenSource = new CancellationTokenSource();
             _browsers = new ConcurrentStack<BrowserWrapper>(browsers);
             _actions = new ConcurrentQueue<IBrowserCommand>(await _stateProvider.GetActions());
 
-            isNeedSaveState = true;
             var t = Task.Run(() => Loop(_loopCancelTokenSource.Token))
                 .ContinueWith(t => _logger.LogError(t.Exception, "loopTask failed with exception"), TaskContinuationOptions.OnlyOnFaulted);
             return;
         }
 
-        public Task RegisterBrowser(BrowserWrapper browser)
+        public async Task LoadAdditionalActions(List<IBrowserCommand> additionalCommands)
+        {
+            if (!isNeedSaveState)
+                throw new InvalidOperationException($"{nameof(BrowserPool)} not started");
+
+            var nextActions = await _stateProvider.GetNextActions();
+            foreach (var action in nextActions)
+            {
+                if (_loopCancelTokenSource.Token.IsCancellationRequested)
+                    await _stateProvider.SaveAction(action);
+                else
+                    _actions.Enqueue(action);
+            }
+        }
+
+        Task IBrowserPoolAdvanced.RegisterBrowser(BrowserWrapper browser)
         {
             _browsers.Push(browser);
             return Task.CompletedTask;
@@ -75,7 +91,7 @@ namespace SeleniumBrowsersPool.BrowserPool
             }
         }
 
-        public async Task DoJob(BrowserWrapper wrapper, IBrowserCommand command, CancellationToken deactivateToken)
+        private async Task DoJob(BrowserWrapper wrapper, IBrowserCommand command, CancellationToken deactivateToken)
         {
             using var _ = _logger.BeginScope("{JobType} {CommandId} on {BrowserId}", command.GetType().Name, command.Id, wrapper._id);
             _logger.LogDebug("Start job");
@@ -145,7 +161,7 @@ namespace SeleniumBrowsersPool.BrowserPool
                 wrapper.CanBeStopped = true;
         }
 
-        internal async Task DoBeamJob(BrowserWrapper wrapper, BeamCommand command, CancellationToken deactivateToken)
+        private async Task DoBeamJob(BrowserWrapper wrapper, BeamCommand command, CancellationToken deactivateToken)
         {
             using var _ = _logger.BeginScope("{JobType} {CommandId} on {BrowserId}", command.GetType().Name, command.Id, wrapper._id);
             _logger.LogDebug("Start job");
@@ -184,7 +200,7 @@ namespace SeleniumBrowsersPool.BrowserPool
                 _logger.LogCritical(new InvalidCommandException(command), "Can't handle command in current method");
                 result = false;
             }
-            else if (command.RunNumber > _poolSettings.Value.CommandMaxRuns)
+            else if (command.RunNumber >= _poolSettings.Value.CommandMaxRuns)
             {
                 await _stateProvider.SaveProblemAction(command, CommandProblem.TooManyRuns);
                 result = false;
@@ -198,10 +214,10 @@ namespace SeleniumBrowsersPool.BrowserPool
             return result;
         }
 
-        Task IBrowserPoolInternal.DoJob(BrowserWrapper wrapper, BeamCommand command)
+        Task IBrowserPoolAdvanced.DoJob(BrowserWrapper wrapper, BeamCommand command)
             => DoBeamJob(wrapper, command, _loopCancelTokenSource.Token);
 
-        public async Task StopAsync()
+        async Task IBrowserPoolAdvanced.StopAsync()
         {
             _logger.LogInformation("Begin stop");
             _loopCancelTokenSource.Cancel();
@@ -225,7 +241,7 @@ namespace SeleniumBrowsersPool.BrowserPool
         protected void Dispose(bool _)
         {
             if (isNeedSaveState)
-                StopAsync().Wait();
+                (this as IBrowserPoolAdvanced).StopAsync().Wait();
             else
                 _logger.LogInformation("State already saved");
         }

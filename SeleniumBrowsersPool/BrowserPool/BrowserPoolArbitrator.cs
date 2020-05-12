@@ -13,7 +13,7 @@ namespace SeleniumBrowsersPool.BrowserPool
 {
     public class BrowserPoolArbitrator : IBrowserPoolArbitrator, IDisposable
     {
-        private readonly IBrowserPoolInternal _browserPool;
+        private readonly IBrowserPoolAdvanced _browserPool;
         private readonly IBrowserFactory _factory;
         private readonly IDateTimeProvider _dateTimeProvider;
         private readonly IOptions<BrowserPoolSettings> _poolSettings;
@@ -22,7 +22,7 @@ namespace SeleniumBrowsersPool.BrowserPool
         private CancellationTokenSource tokenSource;
         private List<BrowserWrapper> browsers = new List<BrowserWrapper>();
 
-        public BrowserPoolArbitrator(IBrowserPoolInternal browserPool,
+        public BrowserPoolArbitrator(IBrowserPoolAdvanced browserPool,
                                      IBrowserFactory factory,
                                      IDateTimeProvider dateTimeProvider,
                                      IOptions<BrowserPoolSettings> poolSettings,

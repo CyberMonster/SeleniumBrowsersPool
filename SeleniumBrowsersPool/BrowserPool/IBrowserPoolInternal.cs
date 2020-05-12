@@ -4,12 +4,13 @@ using System.Threading.Tasks;
 
 namespace SeleniumBrowsersPool.BrowserPool
 {
-    public interface IBrowserPoolInternal
+    public interface IBrowserPoolAdvanced : IBrowserPool
     {
-        public Task StopAsync();
-        public Task StartAsync(List<BrowserWrapper> browsers);
-        public Task RegisterBrowser(BrowserWrapper browser);
         public Task<int> GetQueueLength();
+        public Task LoadAdditionalActions(List<IBrowserCommand> additionalCommands);
+        internal Task StopAsync();
+        internal Task StartAsync(List<BrowserWrapper> browsers);
+        internal Task RegisterBrowser(BrowserWrapper browser);
         internal Task DoJob(BrowserWrapper wrapper, BeamCommand command);
     }
 }

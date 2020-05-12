@@ -15,8 +15,8 @@ namespace SeleniumBrowsersPool
                 .Configure<BrowserPoolSettings>(cfg.GetSection(typeof(BrowserPoolSettings).Name))
                 .AddSingleton<IBrowserPoolArbitrator, BrowserPoolArbitrator>()
                 .AddSingleton<IHostedService>(f => f.GetService<IBrowserPoolArbitrator>())
-                .AddSingleton<IBrowserPool, BrowserPool.BrowserPool>()
-                .AddSingleton(sp => sp.GetService<IBrowserPool>() as IBrowserPoolInternal)
+                .AddSingleton<IBrowserPoolAdvanced, BrowserPool.BrowserPool>()
+                .AddSingleton(sp => sp.GetService<IBrowserPoolAdvanced>() as IBrowserPool)
                 .AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
         public static IServiceCollection AddSeleniumBrowsersPool<TBrowserFactory, TBrowserPoolStateProvider>(this IServiceCollection services, IConfiguration cfg)
