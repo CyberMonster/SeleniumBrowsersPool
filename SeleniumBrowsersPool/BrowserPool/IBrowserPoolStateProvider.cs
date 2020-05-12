@@ -17,6 +17,6 @@ namespace SeleniumBrowsersPool.BrowserPool
         /// You can use it from <see cref="IBrowserPoolAdvanced.LoadAdditionalActions"/> method to reduce the pool usage of RAM at startup.
         /// Current count of unhandled actions in pool queue you can see via <see cref="IBrowserPoolAdvanced.GetQueueLength"/>.
         /// </summary>
-        public Task<IEnumerable<IBrowserCommand>> GetNextActions();
+        public Task<IEnumerable<IBrowserCommand>> GetNextActions(int take);
     }
 }

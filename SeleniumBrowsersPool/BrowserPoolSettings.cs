@@ -5,6 +5,7 @@ namespace SeleniumBrowsersPool
     public class BrowserPoolSettings
     {
         public int MaxDegreeOfParallel { get; set; } = 1;
+        public int? QueueLimit { get; set; } = null;
         public TimeSpan MaxIdleTime { get; set; } = TimeSpan.FromMinutes(10);
         public TimeSpan DeltaIdleTime { get; set; } = TimeSpan.Zero;
         public bool StartBrowsersOnRun { get; set; } = false;

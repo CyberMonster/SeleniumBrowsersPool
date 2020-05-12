@@ -36,7 +36,11 @@ namespace SeleniumBrowsersPool.BrowserPool
         }
 
         public void DoJob(IBrowserCommand command)
-            => _actions.Enqueue(command);
+        {
+            if ((_poolSettings.Value.QueueLimit - _actions.Count ?? 1) <= 0)
+                throw new OverflowException("Pool queue overflowed");
+            _actions.Enqueue(command);
+        }
 
         async Task IBrowserPoolAdvanced.StartAsync(List<BrowserWrapper> browsers)
         {
@@ -51,12 +55,13 @@ namespace SeleniumBrowsersPool.BrowserPool
             return;
         }
 
-        public async Task LoadAdditionalActions(List<IBrowserCommand> additionalCommands)
+        public async Task LoadAdditionalActions(int take)
         {
             if (!isNeedSaveState)
                 throw new InvalidOperationException($"{nameof(BrowserPool)} not started");
 
-            var nextActions = await _stateProvider.GetNextActions();
+            var takeMax = Math.Min(_poolSettings.Value.QueueLimit - _actions.Count ?? take, take);
+            var nextActions = await _stateProvider.GetNextActions(takeMax);
             foreach (var action in nextActions)
             {
                 if (_loopCancelTokenSource.Token.IsCancellationRequested)

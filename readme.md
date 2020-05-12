@@ -25,6 +25,7 @@ You can define the ```BrowserPoolSettings``` section in your config file.
 public class BrowserPoolSettings
 {
     public int MaxDegreeOfParallel { get; set; } = 1;
+    public int? QueueLimit { get; set; } = null;
     public TimeSpan MaxIdleTime { get; set; } = TimeSpan.FromMinutes(10);
     public TimeSpan DeltaIdleTime { get; set; } = TimeSpan.Zero;
     public bool StartBrowsersOnRun { get; set; } = false;
@@ -38,6 +39,7 @@ public class BrowserPoolSettings
 ```
 
 ```MaxDegreeOfParallel``` - set count of max active browsers;
+```QueueLimit``` - limit of queue unhandled actions. Items that do not fit will be saved by ```IBrowserPoolStateProvider.SaveActions```;
 ```MaxIdleTime``` - idle time, after which browser will be closed;
 ```DeltaIdleTime``` - delta between browsers granted idle time;
 ```StartBrowsersOnRun``` - if true, browsers will be started on app start;
@@ -46,7 +48,7 @@ public class BrowserPoolSettings
 ```BrowserMaxFail``` - count of fail job on current browser instance, after which browser will be restarted;
 ```MaxQueueSizePerBrowser``` - if queue on browser less then this value, addition browser not be started;
 ```SendBeamPackages``` - if true, then if the browser in idle state, will be sent a package to prevent auto close by selenoid;
-```BeamPackagesInterval``` - interval between beam packages;
+```BeamPackagesInterval``` - interval between beam packages.
 
 ### Connect to Selenoid
 
