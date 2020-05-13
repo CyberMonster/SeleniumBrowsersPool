@@ -10,30 +10,24 @@ jobs:
     env:
       PackageVersion: 0.1.0.${{ github.run_number }}
       PackageName: SeleniumBrowsersPool.0.1.0.${{ github.run_number }}.nupkg
+      BuildPath: ./bin/release
+      PackagePath: ${{ env.BuildPath }}/packs
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.101
+        dotnet-version: 4.0.30319.42000
     - name: build
-      run: dotnet build --configuration Release --output ./bin/release -p:Version=${{ env.PackageVersion }}
-    - name: build for pack
-      run: dotnet build --configuration Release -p:Version=${{ env.PackageVersion }}
+      run: dotnet build --configuration Release --output ${{ env.BuildPath }} -p:Version=${{ env.PackageVersion }}
+    - name: build package
+      run: dotnet pack --configuration Release --output ${{ env.PackagePath }} -p:Version=${{ env.PackageVersion }}
     - name: upload
       uses: actions/upload-artifact@v1
       with:
         name: art-${{ env.PackageVersion }}
-        path: ./bin/release/${{ env.PackageName }}
-    - name: pack
-      run: dotnet pack --configuration Release --output ./bin/release/packs -p:Version=${{ env.PackageVersion }}
-    - name: setupPushRefs
-      uses: actions/setup-dotnet@v1
-      with:
-        source-url: https://nuget.pkg.github.com/CyberMonster/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        path: ${{ env.PackagePath }}/${{ env.PackageName }}
     - name: push github
-      run: dotnet nuget push "./bin/release/packs/${{ env.PackageName }}" --source "https://nuget.pkg.github.com/CyberMonster/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
+      run: dotnet nuget push "${{ env.PackagePath }}/${{ env.PackageName }}" --source "https://nuget.pkg.github.com/CyberMonster/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
     - name: push nuget
-      run: dotnet nuget push "./bin/release/packs/${{ env.PackageName }}" --source "https://api.nuget.org/v3/index.json" --api-key ${{secrets.nuget_apiKey}}
+      run: dotnet nuget push "${{ env.PackagePath }}/${{ env.PackageName }}" --source "https://api.nuget.org/v3/index.json" --api-key ${{secrets.nuget_apiKey}}
