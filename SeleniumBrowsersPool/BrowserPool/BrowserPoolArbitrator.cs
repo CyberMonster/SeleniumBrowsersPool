@@ -151,7 +151,7 @@ namespace SeleniumBrowsersPool.BrowserPool
 
             var activeBrowsers = browsers.Where(x => !x.CanBeStopped).Count();
             if (activeBrowsers < _poolSettings.Value.MaxDegreeOfParallel
-                && activeBrowsers * _poolSettings.Value.MaxQueueSizePerBrowser < await _browserPool.GetQueueLength()
+                && activeBrowsers * _poolSettings.Value.MaxQueueSizePerBrowser < await _browserPool.GetQueueCount()
                 || (activeBrowsers < 1 && _poolSettings.Value.KeepAliveAtLeastOneBrowser))
             {
                 var browser = StartBrowserSafe((browsers.LastOrDefault()?._maxIdleTime ?? _poolSettings.Value.MaxIdleTime) + _poolSettings.Value.DeltaIdleTime);

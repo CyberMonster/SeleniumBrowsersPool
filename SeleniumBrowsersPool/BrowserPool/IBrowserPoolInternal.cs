@@ -6,8 +6,8 @@ namespace SeleniumBrowsersPool.BrowserPool
 {
     public interface IBrowserPoolAdvanced : IBrowserPool
     {
-        public Task<int> GetQueueLength();
-        public Task LoadAdditionalActions(List<IBrowserCommand> additionalCommands);
+        public Task<int> GetQueueCount();
+        public Task LoadAdditionalActions(int take);
         internal Task StopAsync();
         internal Task StartAsync(List<BrowserWrapper> browsers);
         internal Task RegisterBrowser(BrowserWrapper browser);

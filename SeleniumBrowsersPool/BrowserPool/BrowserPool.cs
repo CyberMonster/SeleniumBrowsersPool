@@ -48,7 +48,7 @@ namespace SeleniumBrowsersPool.BrowserPool
 
             _loopCancelTokenSource = new CancellationTokenSource();
             _browsers = new ConcurrentStack<BrowserWrapper>(browsers);
-            _actions = new ConcurrentQueue<IBrowserCommand>(await _stateProvider.GetActions());
+            _actions = new ConcurrentQueue<IBrowserCommand>(await _stateProvider.GetActions(_poolSettings.Value.QueueLimit));
 
             var t = Task.Run(() => Loop(_loopCancelTokenSource.Token))
                 .ContinueWith(t => _logger.LogError(t.Exception, "loopTask failed with exception"), TaskContinuationOptions.OnlyOnFaulted);
@@ -60,9 +60,10 @@ namespace SeleniumBrowsersPool.BrowserPool
             if (!isNeedSaveState)
                 throw new InvalidOperationException($"{nameof(BrowserPool)} not started");
 
-            var takeMax = Math.Min(_poolSettings.Value.QueueLimit - _actions.Count ?? take, take);
-            var nextActions = await _stateProvider.GetNextActions(takeMax);
-            foreach (var action in nextActions)
+            var nextActions = _poolSettings.Value.QueueLimit.HasValue
+                ? _stateProvider.GetActions(Math.Min(_poolSettings.Value.QueueLimit.Value - _actions.Count, take))
+                : _stateProvider.GetActions(null);
+            foreach (var action in await nextActions)
             {
                 if (_loopCancelTokenSource.Token.IsCancellationRequested)
                     await _stateProvider.SaveAction(action);
@@ -77,7 +78,7 @@ namespace SeleniumBrowsersPool.BrowserPool
             return Task.CompletedTask;
         }
 
-        public Task<int> GetQueueLength()
+        public Task<int> GetQueueCount()
             => Task.FromResult(_actions?.Count ?? 0);
 
         private void Loop(CancellationToken token)

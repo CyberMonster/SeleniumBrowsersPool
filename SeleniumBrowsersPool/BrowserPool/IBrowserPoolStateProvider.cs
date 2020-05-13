@@ -9,14 +9,12 @@ namespace SeleniumBrowsersPool.BrowserPool
         public Task SaveActions(IEnumerable<IBrowserCommand> commands);
         public Task SaveAction(IBrowserCommand command);
         public Task SaveProblemAction(IBrowserCommand command, CommandProblem problem);
-        public Task<IEnumerable<IBrowserCommand>> GetActions();
-
         /// <summary>
-        /// Return additional actions from storage.
-        /// Needn't to implementation in common case of usage.
-        /// You can use it from <see cref="IBrowserPoolAdvanced.LoadAdditionalActions"/> method to reduce the pool usage of RAM at startup.
-        /// Current count of unhandled actions in pool queue you can see via <see cref="IBrowserPoolAdvanced.GetQueueLength"/>.
+        /// Return data from storage.
+        /// Null mean that queue haven't limitation. Need get all data from storage.
         /// </summary>
-        public Task<IEnumerable<IBrowserCommand>> GetNextActions(int take);
+        /// <param name="take"></param>
+        /// <returns></returns>
+        public Task<IEnumerable<IBrowserCommand>> GetActions(int? take);
     }
 }
