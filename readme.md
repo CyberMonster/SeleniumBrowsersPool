@@ -2,6 +2,8 @@
 
 In the common case of selenium using you start the browser on each test. After that, you turn off the browser and do it again and again and again. But not in each case need restart the browser because an environment not change. In this case, and a case of production usage, you can use this pool for increase performance and utilization of resources.
 
+![Build and push](https://github.com/CyberMonster/SeleniumBrowsersPool/workflows/Build%20and%20push/badge.svg?branch=master)
+
 ## Setup
 
 Implement ```IBrowserFactory``` interface. It needed to create configurated ```RemoteWebDriver```;
