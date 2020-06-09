@@ -41,6 +41,7 @@ namespace SeleniumBrowsersPool.BrowserPool
             {
                 _logger.LogWarning("Queue overflowed");
                 _stateProvider.SaveAction(command);
+                return;
             }
 
             _actions.Enqueue(command);
