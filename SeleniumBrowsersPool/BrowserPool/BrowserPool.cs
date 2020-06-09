@@ -38,7 +38,11 @@ namespace SeleniumBrowsersPool.BrowserPool
         public void DoJob(IBrowserCommand command)
         {
             if ((_poolSettings.Value.QueueLimit - _actions.Count ?? 1) <= 0)
-                throw new OverflowException("Pool queue overflowed");
+            {
+                _logger.LogWarning("Queue overflowed");
+                _stateProvider.SaveAction(command);
+            }
+
             _actions.Enqueue(command);
         }
 
