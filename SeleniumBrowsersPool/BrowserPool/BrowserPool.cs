@@ -39,7 +39,7 @@ namespace SeleniumBrowsersPool.BrowserPool
         {
             if ((_poolSettings.Value.QueueLimit - _actions.Count ?? 1) <= 0)
             {
-                _logger.LogWarning("Queue overflowed");
+                _logger.LogTrace("Queue overflowed");
                 _stateProvider.SaveAction(command);
                 return;
             }
