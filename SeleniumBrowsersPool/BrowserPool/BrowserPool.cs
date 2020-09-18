@@ -65,8 +65,11 @@ namespace SeleniumBrowsersPool.BrowserPool
             if (!isNeedSaveState)
                 throw new InvalidOperationException($"{nameof(BrowserPool)} not started");
 
+            var takeActionsCount = Math.Min(Math.Max(_poolSettings.Value.QueueLimit.Value - _actions.Count, 0), take);
+            _logger.LogTrace("Load additional actions: {TakeActions}", takeActionsCount);
+
             var nextActions = _poolSettings.Value.QueueLimit.HasValue
-                ? _stateProvider.GetActions(Math.Min(_poolSettings.Value.QueueLimit.Value - _actions.Count, take))
+                ? _stateProvider.GetActions(takeActionsCount)
                 : _stateProvider.GetActions(null);
             foreach (var action in await nextActions)
             {
