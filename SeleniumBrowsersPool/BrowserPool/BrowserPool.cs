@@ -35,16 +35,23 @@ namespace SeleniumBrowsersPool.BrowserPool
             _logger = logger;
         }
 
-        public void DoJob(IBrowserCommand command)
+        public Task DoJob(IBrowserCommand command)
         {
-            if ((_poolSettings.Value.QueueLimit - _actions.Count ?? 1) <= 0)
+            if (!isNeedSaveState)
+            {
+                _logger.LogTrace("BrowserPool stoped");
+                _stateProvider.SaveAction(command);
+                return Task.CompletedTask;
+            }
+            else if ((_poolSettings.Value.QueueLimit - _actions.Count ?? 1) <= 0)
             {
                 _logger.LogTrace("Queue overflowed");
                 _stateProvider.SaveAction(command);
-                return;
+                return Task.CompletedTask;
             }
 
             _actions.Enqueue(command);
+            return Task.CompletedTask;
         }
 
         async Task IBrowserPoolAdvanced.StartAsync(List<BrowserWrapper> browsers)

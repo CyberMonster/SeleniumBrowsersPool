@@ -1,9 +1,10 @@
 ﻿using SeleniumBrowsersPool.BrowserPool.Commands;
+using System.Threading.Tasks;
 
 namespace SeleniumBrowsersPool.BrowserPool
 {
     public interface IBrowserPool
     {
-        public void DoJob(IBrowserCommand command);
+        public Task DoJob(IBrowserCommand command);
     }
 }
