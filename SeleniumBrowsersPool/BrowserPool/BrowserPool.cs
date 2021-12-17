@@ -181,6 +181,7 @@ namespace SeleniumBrowsersPool.BrowserPool
             }
             localLoopCancel.Cancel();
             wrapper._isInWork = false;
+            await _stateProvider.NotifyActionProcessed(command);
             wrapper.LastJobTime = _dateTimeProvider.UtcNow;
             _logger.LogDebug("Finish job");
 

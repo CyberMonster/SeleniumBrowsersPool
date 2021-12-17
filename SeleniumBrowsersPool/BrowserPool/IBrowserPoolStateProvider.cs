@@ -17,5 +17,6 @@ namespace SeleniumBrowsersPool.BrowserPool
         /// <param name="take"></param>
         /// <returns></returns>
         public Task<IEnumerable<IBrowserCommand>> GetActions(int? take);
+        public Task NotifyActionProcessed(IBrowserCommand command);
     }
 }
