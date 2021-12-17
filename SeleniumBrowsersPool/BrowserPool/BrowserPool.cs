@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using SeleniumBrowsersPool.BrowserPool.Commands;
 using SeleniumBrowsersPool.Helpers;
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -39,7 +41,7 @@ namespace SeleniumBrowsersPool.BrowserPool
         {
             if (!isNeedSaveState)
             {
-                _logger.LogTrace("BrowserPool stoped");
+                _logger.LogTrace("BrowserPool stopped");
                 _stateProvider.SaveAction(command);
                 return Task.CompletedTask;
             }
@@ -62,9 +64,8 @@ namespace SeleniumBrowsersPool.BrowserPool
             _browsers = new ConcurrentStack<BrowserWrapper>(browsers);
             _actions = new ConcurrentQueue<IBrowserCommand>(await _stateProvider.GetActions(_poolSettings.Value.QueueLimit));
 
-            var t = Task.Run(() => Loop(_loopCancelTokenSource.Token))
+            _ = Task.Run(() => Loop(_loopCancelTokenSource.Token))
                 .ContinueWith(t => _logger.LogError(t.Exception, "loopTask failed with exception"), TaskContinuationOptions.OnlyOnFaulted);
-            return;
         }
 
         public async Task LoadAdditionalActions(int take)
@@ -145,19 +146,26 @@ namespace SeleniumBrowsersPool.BrowserPool
             var localLoopCancelToken = localLoopCancel.Token;
             var t = Task.Run(async () =>
             {
-                while (true)
+                try
                 {
-                    if (localLoopCancelToken.IsCancellationRequested)
-                        break;
-                    else if (command.CancellationToken.IsCancellationRequested)
-                        break;
-                    else if (deactivateToken.IsCancellationRequested)
+                    while (true)
                     {
-                        await _stateProvider.SaveAction(command);
-                        break;
-                    }
+                        if (localLoopCancelToken.IsCancellationRequested)
+                            break;
+                        else if (command.CancellationToken.IsCancellationRequested)
+                            break;
+                        else if (deactivateToken.IsCancellationRequested)
+                        {
+                            await _stateProvider.SaveAction(command);
+                            break;
+                        }
 
-                    Thread.Sleep(200);
+                        Thread.Sleep(100);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Can't save command. Command: {@Command}", command);
                 }
             });
             try
@@ -167,14 +175,14 @@ namespace SeleniumBrowsersPool.BrowserPool
             catch (Exception ex)
             {
                 ++wrapper.Fails;
-                _logger.LogError(ex, "Job fail", command.GetType().Name, wrapper._id);
+                _logger.LogError(ex, "Job fail");
                 if (!deactivateToken.IsCancellationRequested)
                     _actions.Enqueue(command);
             }
             localLoopCancel.Cancel();
             wrapper._isInWork = false;
             wrapper.LastJobTime = _dateTimeProvider.UtcNow;
-            _logger.LogDebug("Finish job", command.GetType().Name, wrapper._id);
+            _logger.LogDebug("Finish job");
 
             if (wrapper.Fails < _poolSettings.Value.BrowserMaxFail)
                 _browsers.Push(wrapper);
@@ -204,7 +212,7 @@ namespace SeleniumBrowsersPool.BrowserPool
             catch (Exception ex)
             {
                 ++wrapper.Fails;
-                _logger.LogError(ex, "Job fail", command.GetType().Name, wrapper._id);
+                _logger.LogError(ex, "Job fail");
             }
             wrapper._isInWork = false;
             wrapper.LastBeamTime = _dateTimeProvider.UtcNow;

@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using SeleniumBrowsersPool.BrowserPool;
 using SeleniumBrowsersPool.BrowserPool.Factories;
 using SeleniumBrowsersPool.Helpers;
+
 using System;
 
 namespace SeleniumBrowsersPool

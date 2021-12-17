@@ -1,4 +1,5 @@
-﻿using OpenQA.Selenium.Remote;
+﻿using OpenQA.Selenium;
+
 using System;
 
 namespace SeleniumBrowsersPool.BrowserPool
@@ -9,14 +10,14 @@ namespace SeleniumBrowsersPool.BrowserPool
         public bool CanBeStopped { get; internal set; }
 
         public readonly Guid _id = Guid.NewGuid();
-        public readonly RemoteWebDriver _driver;
+        public readonly WebDriver _driver;
         public readonly TimeSpan _maxIdleTime;
         internal bool _isInWork;
 
         public DateTime LastJobTime { get; internal set; }
         public DateTime LastBeamTime { get; internal set; }
 
-        public BrowserWrapper(RemoteWebDriver driver, TimeSpan maxIdleTime, DateTime creationTime)
+        public BrowserWrapper(WebDriver driver, TimeSpan maxIdleTime, DateTime creationTime)
         {
             _driver = driver;
             _maxIdleTime = maxIdleTime;

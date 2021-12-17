@@ -1,4 +1,5 @@
 ﻿using SeleniumBrowsersPool.BrowserPool.Commands;
+
 using System.Threading.Tasks;
 
 namespace SeleniumBrowsersPool.BrowserPool

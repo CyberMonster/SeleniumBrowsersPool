@@ -1,4 +1,5 @@
-﻿using OpenQA.Selenium.Remote;
+﻿using OpenQA.Selenium;
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace SeleniumBrowsersPool.BrowserPool.Commands
         /// </summary>
         /// <param name="driver"> current driver that run command </param>
         /// <param name="cancellationToken"> if true that command was be cancelled and command enqueue back </param>
-        internal Task Execute(RemoteWebDriver driver, CancellationToken cancellationToken, IServiceProvider serviceProvider);
+        internal Task Execute(WebDriver driver, CancellationToken cancellationToken, IServiceProvider serviceProvider);
 
         /// <summary>
         /// Exec command on browser. Only for impl in derived class.
@@ -29,6 +30,6 @@ namespace SeleniumBrowsersPool.BrowserPool.Commands
         /// </summary>
         /// <param name="driver"> current driver that run command </param>
         /// <param name="cancellationToken"> if true that command was be cancelled and command enqueue back </param>
-        public Task Execute(RemoteWebDriver driver, CancellationToken cancellationToken, IServiceProvider serviceProvider, int runNumber);
+        public Task Execute(WebDriver driver, CancellationToken cancellationToken, IServiceProvider serviceProvider, int runNumber);
     }
 }

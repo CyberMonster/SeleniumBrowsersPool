@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using SeleniumBrowsersPool.BrowserPool.Commands;
 using SeleniumBrowsersPool.BrowserPool.Factories;
 using SeleniumBrowsersPool.Helpers;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +22,7 @@ namespace SeleniumBrowsersPool.BrowserPool
         private readonly ILogger<BrowserPoolArbitrator> _logger;
 
         private CancellationTokenSource tokenSource;
-        private List<BrowserWrapper> browsers = new List<BrowserWrapper>();
+        private List<BrowserWrapper> browsers = new();
 
         public BrowserPoolArbitrator(IBrowserPoolAdvanced browserPool,
                                      IBrowserFactory factory,
@@ -70,7 +72,7 @@ namespace SeleniumBrowsersPool.BrowserPool
             tokenSource.Cancel();
             await _browserPool.StopAsync();
             StopBrowsers();
-            _logger.LogDebug("All browsers been leved");
+            _logger.LogDebug("All browsers leaved");
             isDisposed = true;
         }
 
@@ -103,7 +105,7 @@ namespace SeleniumBrowsersPool.BrowserPool
         private void TagBrowsers()
         {
             if (!_poolSettings.Value.KeepAliveAtLeastOneBrowser
-                    || browsers.Where(x => !x.CanBeStopped).Count() > 1)
+                    || browsers.Count(x => !x.CanBeStopped) > 1)
             {
                 var browserToStop = browsers
                     .FirstOrDefault(b => b.LastJobTime == browsers
@@ -149,7 +151,7 @@ namespace SeleniumBrowsersPool.BrowserPool
             if (token.IsCancellationRequested)
                 return;
 
-            var activeBrowsers = browsers.Where(x => !x.CanBeStopped).Count();
+            var activeBrowsers = browsers.Count(x => !x.CanBeStopped);
             if (activeBrowsers < _poolSettings.Value.MaxDegreeOfParallel
                 && activeBrowsers * _poolSettings.Value.MaxQueueSizePerBrowser < await _browserPool.GetQueueCount()
                 || (activeBrowsers < 1 && _poolSettings.Value.KeepAliveAtLeastOneBrowser))
@@ -166,7 +168,6 @@ namespace SeleniumBrowsersPool.BrowserPool
                 }
 
                 await _browserPool.RegisterBrowser(browser);
-                return;
             }
         }
 
@@ -190,7 +191,7 @@ namespace SeleniumBrowsersPool.BrowserPool
             {
                 try
                 {
-                    var handler = b._driver.CurrentWindowHandle;
+                    _ = b._driver.CurrentWindowHandle;
                 }
                 catch (Exception ex)
                 {
@@ -198,7 +199,6 @@ namespace SeleniumBrowsersPool.BrowserPool
                 }
 
                 b._driver.Quit();
-                return;
             });
             browsers.Clear();
         }
