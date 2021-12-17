@@ -1,9 +1,9 @@
-﻿using OpenQA.Selenium.Remote;
+﻿using OpenQA.Selenium;
 
 namespace SeleniumBrowsersPool.BrowserPool.Factories
 {
     public interface IBrowserFactory
     {
-        public RemoteWebDriver Create();
+        public WebDriver Create();
     }
 }
