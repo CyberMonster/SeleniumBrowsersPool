@@ -192,13 +192,12 @@ namespace SeleniumBrowsersPool.BrowserPool
                 try
                 {
                     _ = b._driver.CurrentWindowHandle;
+                    b._driver.Quit();
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Session can't be closed automatically.");
                 }
-
-                b._driver.Quit();
             });
             browsers.Clear();
         }
