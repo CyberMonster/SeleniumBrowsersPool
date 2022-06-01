@@ -178,6 +178,8 @@ namespace SeleniumBrowsersPool.BrowserPool
                 _logger.LogError(ex, "Job fail");
                 if (!deactivateToken.IsCancellationRequested)
                     _actions.Enqueue(command);
+                else
+                    await _stateProvider.SaveAction(command);
             }
             localLoopCancel.Cancel();
             wrapper._isInWork = false;
